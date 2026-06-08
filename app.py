@@ -16,25 +16,26 @@ st.title("🌊 Flood Prediction System")
 st.write("Enter values between 1 and 10 for each factor.")
 
 # ----------------------------
-# Load Model Safely
+# Load Model Safely (FIXED)
 # ----------------------------
-MODEL_PATH = "Notebook/model.pkl"
+BASE_DIR = os.path.dirname(__file__)
+MODEL_PATH = os.path.join(BASE_DIR, "Notebook", "model.pkl")
 
 if not os.path.exists(MODEL_PATH):
-    st.error("❌ model.pkl not found. Please run training script first.")
+    st.error(f"❌ model.pkl not found at: {MODEL_PATH}")
     st.stop()
 
 with open(MODEL_PATH, "rb") as file:
     data = pickle.load(file)
 
-# Handle both old and new model formats
+# Handle both formats
 if isinstance(data, dict):
     model = data["model"]
     feature_order = data["features"]
 else:
     model = data
     feature_order = [
-        "Monsoon_Intensity",
+        "MonsoonIntensity",
         "TopographyDrainage",
         "RiverManagement",
         "Deforestation",
@@ -70,13 +71,12 @@ for feature in feature_order:
 # ----------------------------
 if st.button("Predict Flood Probability"):
 
-    input_data = pd.DataFrame([[
-        inputs[f] for f in feature_order
-    ]], columns=feature_order)
+    input_data = pd.DataFrame([[inputs[f] for f in feature_order]],
+                               columns=feature_order)
 
     prediction = float(model.predict(input_data)[0])
 
-    # Clamp prediction safely
+    # Safety clamp
     prediction = max(0.0, min(1.0, prediction))
 
     st.success(f"🌊 Predicted Flood Probability: {prediction:.4f}")
@@ -90,3 +90,4 @@ if st.button("Predict Flood Probability"):
         st.warning("🟡 Medium Flood Risk")
     else:
         st.error("🔴 High Flood Risk")
+        
